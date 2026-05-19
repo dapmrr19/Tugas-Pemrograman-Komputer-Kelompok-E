@@ -43,7 +43,7 @@
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm font-semibold">Deadline notifications</p>
-                        <p class="mt-1 text-sm text-zinc-600">Auto-updates every minute (simple JS polling).</p>
+                        
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @if ($overdueCount > 0)
