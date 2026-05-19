@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Laravel</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+
+    <link rel="preload" as="style" href="http://127.0.0.1:8000/build/assets/app-CZ4r-0p5.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:8000/build/assets/app-BjMeHjpC.js" /><link rel="stylesheet" href="http://127.0.0.1:8000/build/assets/app-CZ4r-0p5.css" /><script type="module" src="http://127.0.0.1:8000/build/assets/app-BjMeHjpC.js"></script><script id="browser-logger-active">
+(function() {
+    const ENDPOINT = 'http://127.0.0.1:8000/_boost/browser-logs';
+    const logQueue = [];
+    let flushTimeout = null;
+
+    console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
+
+    // Store original console methods
+    const originalConsole = {
+        log: console.log,
+        info: console.info,
+        error: console.error,
+        warn: console.warn,
+        table: console.table
+    };
+
+    // Helper to safely stringify values
+    function safeStringify(obj) {
+        const seen = new WeakSet();
+        return JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) return '[Circular]';
+                seen.add(value);
+            }
+            if (value instanceof Error) {
+                return {
+                    name: value.name,
+                    message: value.message,
+                    stack: value.stack
+                };
+            }
+            return value;
+        });
+    }
+
+    // Batch and send logs
+    function flushLogs() {
+        if (logQueue.length === 0) return;
+
+        const batch = logQueue.splice(0, logQueue.length);
+
+        fetch(ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ logs: batch })
+        }).catch(err => {
+            // Silently fail to avoid infinite loops
+            originalConsole.error('Failed to send logs:', err);
+        });
+    }
+
+    // Debounced flush (100ms)
+    function scheduleFlush() {
+        if (flushTimeout) clearTimeout(flushTimeout);
+        flushTimeout = setTimeout(flushLogs, 100);
+    }
+
+    // Intercept console methods
+    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+        console[method] = function(...args) {
+            // Call original method
+            originalConsole[method].apply(console, args);
+
+            // Capture log data
+            try {
+                logQueue.push({
+                    type: method,
+                    timestamp: new Date().toISOString(),
+                    data: args.map(arg => {
+                        try {
+                            return typeof arg === 'object' ? JSON.parse(safeStringify(arg)) : arg;
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+
+                scheduleFlush();
+            } catch (e) {
+                // Fail silently
+            }
+        };
+    });
+
+    // Global error handlers for uncaught errors
+    const originalOnError = window.onerror;
+    window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
+        try {
+            logQueue.push({
+                type: 'uncaught_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: errorMsg,
+                    filename: url,
+                    lineno: lineNumber,
+                    colno: colNumber,
+                    error: error ? {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Call original handler if it exists
+        if (originalOnError && typeof originalOnError === 'function') {
+            return originalOnError(errorMsg, url, lineNumber, colNumber, error);
+        }
+
+        // Let the error continue to propagate
+        return false;
+    }
+    window.addEventListener('error', (event) => {
+        try {
+            logQueue.push({
+                type: 'window_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno,
+                    error: event.error ? {
+                        name: event.error.name,
+                        message: event.error.message,
+                        stack: event.error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the error continue to propagate
+        return false;
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        try {
+            logQueue.push({
+                type: 'error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: 'Unhandled Promise Rejection',
+                    reason: event.reason instanceof Error ? {
+                        name: event.reason.name,
+                        message: event.reason.message,
+                        stack: event.reason.stack
+                    } : event.reason
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the rejection continue to propagate
+        return false;
+    });
+
+    // Flush on page unload
+    window.addEventListener('beforeunload', () => {
+        if (logQueue.length > 0) {
+            navigator.sendBeacon(ENDPOINT, JSON.stringify({ logs: logQueue }));
+        }
+    });
+})();
+</script>
+</head>
+<body class="min-h-screen bg-white text-zinc-900">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-green-50 via-white to-white"></div>
+    </div>
+
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <header class="flex items-center justify-between py-8">
+            <div>
+                <p class="text-xs font-semibold tracking-wide text-green-700">PUBLIC · SINGLE USER</p>
+                <h1 class="mt-1 text-2xl font-semibold tracking-tight">Todo List</h1>
+                <p class="mt-1 text-sm text-zinc-600">Minimal, card-based, deadline-aware.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+            type="button"
+            class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:border-zinc-300"
+            x-data
+            @click="$dispatch('open-modal', { name: 'categories' })"
+        >
+            Manage Categories
+        </button>
+        <button
+            type="button"
+            class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:border-zinc-300"
+            x-data
+            @click="$dispatch('open-modal', { name: 'subjects' })"
+        >
+            Manage Subjects
+        </button>
+            </div>
+        </header>
+
+        <main class="pb-12">
+            <div class="space-y-6" x-data="{ now: Date.parse('2026-05-18T23:39:37+00:00') }" x-init="setInterval(() => now = Date.now(), 60_000)">
+        
+        
+        <div class="grid gap-6 lg:grid-cols-12">
+            <section class="lg:col-span-5">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-5">
+                    <h2 class="text-base font-semibold">Add task</h2>
+                    <p class="mt-1 text-sm text-zinc-600">Create tasks with deadline, category, subject, and status.</p>
+
+                    <form method="POST" action="http://127.0.0.1:8000/tasks" class="mt-5 space-y-4">
+                        <input type="hidden" name="_token" value="ueaeNbHZrGGGpDe3k4SID8n2UC3QManQXTcdlhHz" autocomplete="off">
+                        <div>
+                            <label class="text-sm font-medium" for="task_name">Task Name</label>
+                            <input
+                                id="task_name"
+                                name="task_name"
+                                value=""
+                                class="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                placeholder="e.g. Finish report"
+                                required
+                            />
+                                                    </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="text-sm font-medium" for="deadline">Deadline</label>
+                                <input
+                                    id="deadline"
+                                    type="datetime-local"
+                                    name="deadline"
+                                    value=""
+                                    class="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                />
+                                                            </div>
+
+                            <div>
+                                <label class="text-sm font-medium" for="status">Status</label>
+                                <select
+                                    id="status"
+                                    name="status"
+                                    class="mt-1 w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                >
+                                                                            <option value="todo" selected>To Do</option>
+                                                                            <option value="in_progress" >In Progress</option>
+                                                                            <option value="done" >Done</option>
+                                                                    </select>
+                                                            </div>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="text-sm font-medium" for="category_id">Category</label>
+                                <select
+                                    id="category_id"
+                                    name="category_id"
+                                    class="mt-1 w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                >
+                                    <option value="">—</option>
+                                                                    </select>
+                                                            </div>
+
+                            <div>
+                                <label class="text-sm font-medium" for="subject_id">Subject</label>
+                                <select
+                                    id="subject_id"
+                                    name="subject_id"
+                                    class="mt-1 w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                >
+                                    <option value="">—</option>
+                                                                    </select>
+                                                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button
+                                type="submit"
+                                class="cursor-pointer w-full rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                            >
+                                Add Task
+                            </button>
+                            <p class="text-xs text-zinc-500">Tip: create categories/subjects from the buttons above.</p>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="lg:col-span-7">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-5">
+                    <div class="flex items-baseline justify-between">
+                        <h2 class="text-base font-semibold">Tasks</h2>
+                        <p class="text-sm text-zinc-600">0 total</p>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                                                    <div class="rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
+                                <p class="text-sm font-semibold">No tasks yet</p>
+                                <p class="mt-1 text-sm text-zinc-600">Add your first task from the form.</p>
+                            </div>
+                                            </div>
+                </div>
+            </section>
+        </div>
+
+        
+        <div
+            x-data="modalController('categories')"
+            x-on:open-modal.window="onOpen($event)"
+            x-show="open"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            aria-modal="true"
+            role="dialog"
+        >
+            <div class="absolute inset-0 bg-zinc-900/40" @click="open = false"></div>
+            <div class="relative w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-base font-semibold">Categories</h3>
+                        <p class="mt-1 text-sm text-zinc-600">Add, edit, or delete categories directly from UI.</p>
+                    </div>
+                    <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold" @click="open = false">Close</button>
+                </div>
+
+                <form method="POST" action="http://127.0.0.1:8000/categories" class="mt-4 flex gap-2">
+                    <input type="hidden" name="_token" value="ueaeNbHZrGGGpDe3k4SID8n2UC3QManQXTcdlhHz" autocomplete="off">                    <input
+                        name="name"
+                        class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                        placeholder="New category name"
+                        required
+                    />
+                    <button class="cursor-pointer rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">Add</button>
+                </form>
+
+                <div class="mt-4 space-y-2">
+                    
+                                            <p class="text-sm text-zinc-600">No categories yet.</p>
+                                    </div>
+            </div>
+        </div>
+
+        
+        <div
+            x-data="modalController('subjects')"
+            x-on:open-modal.window="onOpen($event)"
+            x-show="open"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            aria-modal="true"
+            role="dialog"
+        >
+            <div class="absolute inset-0 bg-zinc-900/40" @click="open = false"></div>
+            <div class="relative w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-base font-semibold">Subjects</h3>
+                        <p class="mt-1 text-sm text-zinc-600">Add, edit, or delete subjects directly from UI.</p>
+                    </div>
+                    <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold" @click="open = false">Close</button>
+                </div>
+
+                <form method="POST" action="http://127.0.0.1:8000/subjects" class="mt-4 flex gap-2">
+                    <input type="hidden" name="_token" value="ueaeNbHZrGGGpDe3k4SID8n2UC3QManQXTcdlhHz" autocomplete="off">                    <input
+                        name="name"
+                        class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                        placeholder="New subject name"
+                        required
+                    />
+                    <button class="cursor-pointer rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">Add</button>
+                </form>
+
+                <div class="mt-4 space-y-2">
+                    
+                                            <p class="text-sm text-zinc-600">No subjects yet.</p>
+                                    </div>
+            </div>
+        </div>
+
+        <script>
+            function modalController(name) {
+                return {
+                    name,
+                    open: false,
+                    onOpen(event) {
+                        if (!event?.detail?.name) return;
+                        this.open = event.detail.name === this.name;
+                    },
+                };
+            }
+        </script>
+    </div>
+        </main>
+        
+    </div>
+</body>
+</html>

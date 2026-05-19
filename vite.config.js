@@ -13,7 +13,8 @@ export default defineConfig({
     server: {
         allowedHosts: 'all',
         cors: true,
-        https: true, // ← ini
+        https: false,
+        host: '127.0.0.1',
         watch: {
             ignored: ['/storage/framework/views/'],
         },
