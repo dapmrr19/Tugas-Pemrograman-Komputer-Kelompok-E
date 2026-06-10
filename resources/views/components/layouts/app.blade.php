@@ -195,8 +195,25 @@
             let confirmEl = container.querySelector('.time-confirmation');
             if (!confirmEl) {
                 confirmEl = document.createElement('div');
-                confirmEl.className = 'time-confirmation text-xs text-zinc-600 ml-2';
-                btn.insertAdjacentElement('afterend', confirmEl);
+                // show confirmation as a block below the whole grid row so it doesn't overlap neighbouring column
+                confirmEl.className = 'time-confirmation text-xs text-zinc-600 mt-2 w-full';
+
+                // find nearest grid row (the parent with Tailwind classes 'grid' and 'sm:grid-cols-2')
+                let ancestor = btn.parentElement;
+                while (ancestor && ancestor !== document.body) {
+                    try {
+                        if (ancestor.classList && (ancestor.classList.contains('sm:grid-cols-2') || ancestor.classList.contains('grid'))) {
+                            // ensure this grid actually contains the datetime input
+                            if (ancestor.querySelector && ancestor.querySelector('input[type="datetime-local"]')) break;
+                        }
+                    } catch (err) {
+                        // ignore
+                    }
+                    ancestor = ancestor.parentElement;
+                }
+
+                const insertTarget = ancestor && ancestor !== document.body ? ancestor : (btn.closest('.mt-1') || btn.parentElement || container);
+                insertTarget.insertAdjacentElement('afterend', confirmEl);
             }
             confirmEl.textContent = 'Set: ' + val.replace('T', ' ');
         }, false);
