@@ -53,7 +53,7 @@
                                 </span>
                             @endif
                             @if ($dueSoonCount > 0)
-                                <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                                <span class="inline-flex items-center rounded-full due-soon px-3 py-1 text-xs font-semibold">
                                     Due in 24h: {{ $dueSoonCount }}
                                 </span>
                             @endif
@@ -251,7 +251,7 @@
                                                         if (isDone) return 'bg-zinc-100 text-zinc-700 ring-zinc-200';
                                                         const diff = deadline - now;
                                                         if (diff < 0) return 'bg-red-50 text-red-700 ring-red-200';
-                                                        if (diff <= 2 * 60 * 60 * 1000) return 'bg-amber-50 text-amber-800 ring-amber-200';
+                                                        if (diff <= 2 * 60 * 60 * 1000) return 'due-soon';
                                                         return 'bg-green-50 text-green-700 ring-green-200';
                                                     })()"
                                                 >
