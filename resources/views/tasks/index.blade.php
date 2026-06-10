@@ -52,6 +52,11 @@
                                     Overdue: {{ $overdueCount }}
                                 </span>
                             @endif
+                            @if (isset($dueIn2hCount) && $dueIn2hCount > 0)
+                                <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                                    Due in 2h: {{ $dueIn2hCount }}
+                                </span>
+                            @endif
                             @if ($dueSoonCount > 0)
                                 <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
                                     Due in 24h: {{ $dueSoonCount }}

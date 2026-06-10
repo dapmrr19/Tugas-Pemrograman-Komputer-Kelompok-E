@@ -32,6 +32,14 @@ class TaskController extends Controller
             ->whereBetween('deadline', [$now, $soon])
             ->count();
 
+        // count tasks due within 2 hours specifically
+        $twoHours = $now->copy()->addHours(2);
+        $dueIn2hCount = Task::query()
+            ->where('status', '!=', Task::STATUS_DONE)
+            ->whereNotNull('deadline')
+            ->whereBetween('deadline', [$now, $twoHours])
+            ->count();
+
         $overdueCount = Task::query()
             ->where('status', '!=', Task::STATUS_DONE)
             ->whereNotNull('deadline')
@@ -86,6 +94,7 @@ class TaskController extends Controller
             'subjects' => $subjects,
             'nowIso' => $now->toIso8601String(),
             'dueSoonCount' => $dueSoonCount,
+            'dueIn2hCount' => $dueIn2hCount,
             'overdueCount' => $overdueCount,
             'nearestDeadlines' => $nearestData,
             'allDeadlines' => $allDeadlinesData,
