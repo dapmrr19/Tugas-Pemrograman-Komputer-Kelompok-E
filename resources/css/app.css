@@ -25,3 +25,15 @@
     /* already uses text-red-600 via JS insertion; ensure small spacing */
 }
 
+/* Fix: ensure datetime-local input and Set button layout in all browsers */
+.mt-1.flex.items-center input[type="datetime-local"] {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.mt-1.flex.items-center [data-set-time] {
+    flex-shrink: 0;
+}
+.time-confirmation {
+    min-width: 0;
+}
+

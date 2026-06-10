@@ -122,13 +122,13 @@
                             <div>
                                 <label class="text-sm font-medium" for="deadline">Deadline</label>
                                 <div class="mt-1 flex items-center gap-2 min-w-0">
-                                    <input
-                                        id="deadline"
-                                        type="datetime-local"
-                                        name="deadline"
-                                        value="{{ old('deadline') }}"
-                                        class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
-                                    />
+                                        <input
+                                            id="deadline"
+                                            type="datetime-local"
+                                            name="deadline"
+                                            value="{{ old('deadline') }}"
+                                            class="flex-1 min-w-0 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                        />
                                     <button type="button" data-set-time class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 flex-shrink-0">Set</button>
                                 </div>
                                 @error('deadline')
