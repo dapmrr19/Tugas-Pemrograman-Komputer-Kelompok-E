@@ -32,14 +32,6 @@ class TaskController extends Controller
             ->whereBetween('deadline', [$now, $soon])
             ->count();
 
-        // count tasks due within 2 hours specifically
-        $twoHours = $now->copy()->addHours(2);
-        $dueIn2hCount = Task::query()
-            ->where('status', '!=', Task::STATUS_DONE)
-            ->whereNotNull('deadline')
-            ->whereBetween('deadline', [$now, $twoHours])
-            ->count();
-
         $overdueCount = Task::query()
             ->where('status', '!=', Task::STATUS_DONE)
             ->whereNotNull('deadline')
@@ -58,33 +50,54 @@ class TaskController extends Controller
             ->orderBy('deadline')
             ->get();
 
-        // helper: produce countdown string like "Xd,Yh,Zm" or "Overdue Xd,Yh,Zm"
+        // helper: produce countdown string like "Xd Yh Zm" or "Overdue" when past
         $formatCountdown = function ($target) use ($now) {
             if (! $target) return null;
             $diff = $target->diffInSeconds($now, false);
-            $abs = abs($diff);
+            if ($diff < 0) {
+                return 'Overdue';
+            }
+            $abs = $diff;
             $days = intdiv($abs, 86400);
             $hours = intdiv($abs % 86400, 3600);
             $minutes = intdiv($abs % 3600, 60);
-            $str = sprintf('%sd %sh %sm', $days, $hours, $minutes);
-            return $diff < 0 ? ('Overdue ' . $str) : $str;
+            return sprintf('%sd %sh %sm', $days, $hours, $minutes);
         };
 
-        $nearestData = $nearest->map(function ($t) use ($formatCountdown) {
+        $nearestData = $nearest->map(function ($t) use ($formatCountdown, $now) {
+            $status = 'scheduled';
+            if (! $t->deadline) {
+                $status = 'scheduled';
+            } else {
+                $diff = $t->deadline->diffInSeconds($now, false);
+                if ($diff < 0) $status = 'overdue';
+                elseif ($diff <= 2 * 60 * 60) $status = 'due_soon';
+                else $status = 'scheduled';
+            }
+
             return [
                 'id' => $t->id,
                 'task_name' => $t->task_name,
                 'deadline' => $t->deadline?->format('Y-m-d H:i'),
                 'due_countdown' => $formatCountdown($t->deadline),
+                'status' => $status,
             ];
         });
 
-        $allDeadlinesData = $allDeadlines->map(function ($t) use ($formatCountdown) {
+        $allDeadlinesData = $allDeadlines->map(function ($t) use ($formatCountdown, $now) {
+            $status = 'scheduled';
+            if ($t->deadline) {
+                $diff = $t->deadline->diffInSeconds($now, false);
+                if ($diff < 0) $status = 'overdue';
+                elseif ($diff <= 2 * 60 * 60) $status = 'due_soon';
+            }
+
             return [
                 'id' => $t->id,
                 'task_name' => $t->task_name,
                 'deadline' => $t->deadline?->format('Y-m-d H:i'),
                 'due_countdown' => $formatCountdown($t->deadline),
+                'status' => $status,
             ];
         });
 

@@ -52,11 +52,6 @@
                                     Overdue: {{ $overdueCount }}
                                 </span>
                             @endif
-                            @if (isset($dueIn2hCount) && $dueIn2hCount > 0)
-                                <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
-                                    Due in 2h: {{ $dueIn2hCount }}
-                                </span>
-                            @endif
                             @if ($dueSoonCount > 0)
                                 <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
                                     Due in 24h: {{ $dueSoonCount }}
@@ -67,7 +62,17 @@
                         {{-- show two nearest deadlines front --}}
                         <div class="flex flex-col text-xs text-zinc-700">
                             @foreach ($nearestDeadlines ?? [] as $d)
-                                <div class="px-2 py-1 rounded-md border bg-zinc-50 flex items-center justify-between">
+                                @php
+                                    $classes = 'px-2 py-1 rounded-md border flex items-center justify-between';
+                                    if (($d['status'] ?? '') === 'overdue') {
+                                        $classes = $classes . ' bg-red-50 text-red-700 ring-1 ring-inset ring-red-200';
+                                    } elseif (($d['status'] ?? '') === 'due_soon') {
+                                        $classes = $classes . ' bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200';
+                                    } else {
+                                        $classes = $classes . ' bg-zinc-50 text-zinc-700';
+                                    }
+                                @endphp
+                                <div class="{{ $classes }}">
                                     <div class="font-medium">{{ $d['task_name'] }}</div>
                                     <div class="text-xs text-zinc-500 ml-4">{{ $d['due_countdown'] }}</div>
                                 </div>
