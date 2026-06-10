@@ -142,6 +142,55 @@ class TaskController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             $task->load(['category','subject','reminder']);
+            // recompute counts and nearest deadlines for live UI update
+            $now = now();
+            $soon = $now->copy()->addDay();
+
+            $dueSoonCount = Task::query()
+                ->where('status', '!=', Task::STATUS_DONE)
+                ->whereNotNull('deadline')
+                ->whereBetween('deadline', [$now, $soon])
+                ->count();
+
+            $overdueCount = Task::query()
+                ->where('status', '!=', Task::STATUS_DONE)
+                ->whereNotNull('deadline')
+                ->where('deadline', '<', $now)
+                ->count();
+
+            $nearest = Task::query()
+                ->whereNotNull('deadline')
+                ->orderBy('deadline')
+                ->take(2)
+                ->get();
+
+            $formatCountdown = function ($target) use ($now) {
+                if (! $target) return null;
+                $diff = $target->diffInSeconds($now, false);
+                if ($diff < 0) return 'Overdue';
+                $days = intdiv($diff, 86400);
+                $hours = intdiv($diff % 86400, 3600);
+                $minutes = intdiv($diff % 3600, 60);
+                return sprintf('%sd %sh %sm', $days, $hours, $minutes);
+            };
+
+            $nearestData = $nearest->map(function ($t) use ($formatCountdown, $now) {
+                $status = 'scheduled';
+                if ($t->deadline) {
+                    $diff = $t->deadline->diffInSeconds($now, false);
+                    if ($diff < 0) $status = 'overdue';
+                    elseif ($diff <= 2 * 60 * 60) $status = 'due_soon';
+                }
+
+                return [
+                    'id' => $t->id,
+                    'task_name' => $t->task_name,
+                    'deadline' => $t->deadline?->format('Y-m-d H:i'),
+                    'due_countdown' => $formatCountdown($t->deadline),
+                    'status' => $status,
+                ];
+            })->values();
+
             return response()->json([
                 'id' => $task->id,
                 'task_name' => $task->task_name,
@@ -150,6 +199,11 @@ class TaskController extends Controller
                 'category' => $task->category?->name,
                 'subject' => $task->subject?->name,
                 'reminder' => $task->reminder ? $task->reminder->remind_at->format('Y-m-d H:i') : null,
+                'counts' => [
+                    'dueSoonCount' => $dueSoonCount,
+                    'overdueCount' => $overdueCount,
+                ],
+                'nearestDeadlines' => $nearestData,
             ]);
         }
 

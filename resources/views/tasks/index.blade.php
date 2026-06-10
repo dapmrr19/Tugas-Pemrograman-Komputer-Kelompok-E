@@ -46,7 +46,7 @@
                         <p class="text-xs text-zinc-600">Click view on the right to see details</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2" data-deadline-badges>
                             @if ($overdueCount > 0)
                                 <span class="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
                                     Overdue: {{ $overdueCount }}
@@ -60,7 +60,7 @@
                         </div>
 
                         {{-- show two nearest deadlines front --}}
-                        <div class="flex flex-col text-xs text-zinc-700">
+                        <div class="flex flex-col text-xs text-zinc-700" data-nearest-deadlines>
                             @foreach ($nearestDeadlines ?? [] as $d)
                                 @php
                                     $classes = 'px-2 py-1 rounded-md border flex items-center justify-between';

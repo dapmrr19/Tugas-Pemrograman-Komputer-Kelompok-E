@@ -280,6 +280,51 @@
                 t.textContent = 'Saved.';
                 document.body.appendChild(t);
                 setTimeout(() => t.remove(), 3000);
+
+                // Update notification badges and nearest-deadlines from server response when provided
+                try {
+                    function escapeHtml(str) {
+                        if (!str) return '';
+                        return str.replace(/[&<>"'`]/g, function (s) {
+                            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"})[s];
+                        });
+                    }
+
+                    if (data.counts) {
+                        const badgesEl = document.querySelector('[data-deadline-badges]');
+                        if (badgesEl) {
+                            let html = '';
+                            if ((data.counts.overdueCount || 0) > 0) {
+                                html += '<span class="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">Overdue: ' + (data.counts.overdueCount || 0) + '</span>';
+                            }
+                            if ((data.counts.dueSoonCount || 0) > 0) {
+                                html += '<span class="inline-flex items-center rounded-full due-soon px-3 py-1 text-xs font-semibold">Due in 24h: ' + (data.counts.dueSoonCount || 0) + '</span>';
+                            }
+                            badgesEl.innerHTML = html;
+                        }
+                    }
+
+                    if (data.nearestDeadlines && Array.isArray(data.nearestDeadlines)) {
+                        const ndEl = document.querySelector('[data-nearest-deadlines]');
+                        if (ndEl) {
+                            let html = '';
+                            data.nearestDeadlines.forEach(function (d) {
+                                let classes = 'px-2 py-1 rounded-md border flex items-center justify-between';
+                                if (d.status === 'overdue') classes += ' bg-red-50 text-red-700 ring-1 ring-inset ring-red-200';
+                                else if (d.status === 'due_soon') classes += ' due-soon';
+                                else classes += ' bg-zinc-50 text-zinc-700';
+
+                                html += '<div class="' + classes + '">';
+                                html += '<div class="font-medium">' + escapeHtml(d.task_name) + '</div>';
+                                html += '<div class="text-xs text-zinc-500 ml-4">' + (d.due_countdown || '') + '</div>';
+                                html += '</div>';
+                            });
+                            ndEl.innerHTML = html;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error updating notification UI', err);
+                }
             }).catch(err => {
                 if (err && err.validation) return; // already shown
                 console.error(err);
