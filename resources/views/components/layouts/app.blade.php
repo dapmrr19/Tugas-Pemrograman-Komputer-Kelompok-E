@@ -325,6 +325,39 @@
                 } catch (err) {
                     console.error('Error updating notification UI', err);
                 }
+
+                // Ensure nearest deadlines update live: recalc countdown and classes every 30s
+                function updateNearestLive() {
+                    const nowMs = Date.now();
+                    document.querySelectorAll('[data-nearest-deadlines] [data-deadline-ms]').forEach(el => {
+                        const ms = parseInt(el.getAttribute('data-deadline-ms') || '0', 10);
+                        const countdownEl = el.querySelector('[data-countdown]');
+                        if (!ms || !countdownEl) return;
+                        const diff = ms - nowMs;
+                        if (diff < 0) {
+                            countdownEl.textContent = 'Overdue';
+                            el.classList.remove('due-soon');
+                            el.classList.add('bg-red-50', 'text-red-700');
+                        } else {
+                            // compute days/hours/minutes
+                            const abs = Math.floor(diff / 1000);
+                            const days = Math.floor(abs / 86400);
+                            const hours = Math.floor((abs % 86400) / 3600);
+                            const minutes = Math.floor((abs % 3600) / 60);
+                            countdownEl.textContent = `${days}d ${hours}h ${minutes}m`;
+                            // classes
+                            if (diff <= 2 * 60 * 60 * 1000) {
+                                el.classList.add('due-soon');
+                                el.classList.remove('bg-red-50', 'text-red-700');
+                            } else {
+                                el.classList.remove('due-soon', 'bg-red-50', 'text-red-700');
+                            }
+                        }
+                    });
+                }
+                // run once and schedule
+                try { updateNearestLive(); } catch(e){}
+                if (!window._nearestLiveInterval) window._nearestLiveInterval = setInterval(updateNearestLive, 30_000);
             }).catch(err => {
                 if (err && err.validation) return; // already shown
                 console.error(err);

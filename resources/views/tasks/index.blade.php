@@ -67,14 +67,14 @@
                                     if (($d['status'] ?? '') === 'overdue') {
                                         $classes = $classes . ' bg-red-50 text-red-700 ring-1 ring-inset ring-red-200';
                                     } elseif (($d['status'] ?? '') === 'due_soon') {
-                                        $classes = $classes . ' bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200';
+                                        $classes = $classes . ' due-soon';
                                     } else {
                                         $classes = $classes . ' bg-zinc-50 text-zinc-700';
                                     }
                                 @endphp
-                                <div class="{{ $classes }}">
+                                <div class="{{ $classes }}" data-deadline-ms="{{ $d['deadline_ms'] ?? '' }}">
                                     <div class="font-medium">{{ $d['task_name'] }}</div>
-                                    <div class="text-xs text-zinc-500 ml-4">{{ $d['due_countdown'] }}</div>
+                                    <div class="text-xs text-zinc-500 ml-4" data-countdown>{{ $d['due_countdown'] }}</div>
                                 </div>
                             @endforeach
                         </div>

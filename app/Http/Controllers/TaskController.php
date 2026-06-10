@@ -79,6 +79,7 @@ class TaskController extends Controller
                 'id' => $t->id,
                 'task_name' => $t->task_name,
                 'deadline' => $t->deadline?->format('Y-m-d H:i'),
+                'deadline_ms' => $t->deadline?->getTimestampMs(),
                 'due_countdown' => $formatCountdown($t->deadline),
                 'status' => $status,
             ];
@@ -186,6 +187,7 @@ class TaskController extends Controller
                     'id' => $t->id,
                     'task_name' => $t->task_name,
                     'deadline' => $t->deadline?->format('Y-m-d H:i'),
+                    'deadline_ms' => $t->deadline?->getTimestampMs(),
                     'due_countdown' => $formatCountdown($t->deadline),
                     'status' => $status,
                 ];
