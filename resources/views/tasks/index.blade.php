@@ -246,7 +246,7 @@
                                                         if (isDone) return 'bg-zinc-100 text-zinc-700 ring-zinc-200';
                                                         const diff = deadline - now;
                                                         if (diff < 0) return 'bg-red-50 text-red-700 ring-red-200';
-                                                        if (diff <= 24 * 60 * 60 * 1000) return 'bg-amber-50 text-amber-800 ring-amber-200';
+                                                        if (diff <= 2 * 60 * 60 * 1000) return 'bg-amber-50 text-amber-800 ring-amber-200';
                                                         return 'bg-green-50 text-green-700 ring-green-200';
                                                     })()"
                                                 >
@@ -256,7 +256,7 @@
                                                             if (!deadline) return 'No deadline';
                                                             const diff = deadline - now;
                                                             if (diff < 0) return 'Overdue';
-                                                            if (diff <= 24 * 60 * 60 * 1000) return 'Due soon';
+                                                            if (diff <= 2 * 60 * 60 * 1000) return 'Due soon';
                                                             return 'Scheduled';
                                                         })()"
                                                     ></span>
