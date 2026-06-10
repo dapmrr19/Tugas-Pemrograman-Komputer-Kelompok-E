@@ -107,7 +107,6 @@ class TaskController extends Controller
             'subjects' => $subjects,
             'nowIso' => $now->toIso8601String(),
             'dueSoonCount' => $dueSoonCount,
-            'dueIn2hCount' => $dueIn2hCount,
             'overdueCount' => $overdueCount,
             'nearestDeadlines' => $nearestData,
             'allDeadlines' => $allDeadlinesData,
