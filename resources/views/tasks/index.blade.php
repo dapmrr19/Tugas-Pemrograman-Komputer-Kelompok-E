@@ -204,8 +204,14 @@
 
             <section class="lg:col-span-7">
                 <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-                    <div class="flex items-baseline justify-between">
-                        <h2 class="text-base font-semibold">Tasks</h2>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <!-- Book icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m0 0l-7-4V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8l-7 4z" />
+                            </svg>
+                            <h2 class="text-base font-semibold">Tasks</h2>
+                        </div>
                         <p class="text-sm text-zinc-600" data-tasks-count>{{ $tasks->count() }} total</p>
                     </div>
 
