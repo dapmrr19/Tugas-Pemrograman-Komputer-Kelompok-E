@@ -39,22 +39,55 @@
         @endif
 
         @if ($overdueCount > 0 || $dueSoonCount > 0)
-            <div class="rounded-2xl border border-zinc-200 bg-white p-4">
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4" x-data="{ open:false }">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm font-semibold">Deadline notifications</p>
-                        
+                        <p class="text-xs text-zinc-600">Click view on the right to see details</p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        @if ($overdueCount > 0)
-                            <span class="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
-                                Overdue: {{ $overdueCount }}
-                            </span>
-                        @endif
-                        @if ($dueSoonCount > 0)
-                            <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
-                                Due in 24h: {{ $dueSoonCount }}
-                            </span>
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap gap-2">
+                            @if ($overdueCount > 0)
+                                <span class="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
+                                    Overdue: {{ $overdueCount }}
+                                </span>
+                            @endif
+                            @if ($dueSoonCount > 0)
+                                <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                                    Due in 24h: {{ $dueSoonCount }}
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- show two nearest deadlines front --}}
+                        <div class="flex flex-col text-xs text-zinc-700">
+                            @foreach ($nearestDeadlines ?? [] as $d)
+                                <div class="px-2 py-1 rounded-md border bg-zinc-50 flex items-center justify-between">
+                                    <div class="font-medium">{{ $d['task_name'] }}</div>
+                                    <div class="text-xs text-zinc-500 ml-4">{{ $d['due_countdown'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:border-zinc-300" @click="open = !open">View</button>
+                    </div>
+                </div>
+
+                {{-- modal / dropdown for details --}}
+                <div x-show="open" x-cloak class="mt-3 rounded-lg border border-zinc-100 bg-white p-3 shadow">
+                    <div class="text-sm font-semibold">All deadlines</div>
+                    <div class="mt-2 space-y-2 text-sm">
+                        @foreach ($allDeadlines ?? [] as $d)
+                            <div class="rounded-lg border border-zinc-100 p-2 flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium">{{ $d['task_name'] }}</div>
+                                    <div class="text-xs text-zinc-500">Deadline: {{ $d['deadline'] }}</div>
+                                </div>
+                                <div class="text-xs text-amber-700">{{ $d['due_countdown'] }}</div>
+                            </div>
+                        @endforeach
+                        @if (empty($allDeadlines) || collect($allDeadlines)->isEmpty())
+                            <div class="text-xs text-zinc-500">No deadlines</div>
                         @endif
                     </div>
                 </div>
@@ -88,13 +121,16 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label class="text-sm font-medium" for="deadline">Deadline</label>
-                                <input
-                                    id="deadline"
-                                    type="datetime-local"
-                                    name="deadline"
-                                    value="{{ old('deadline') }}"
-                                    class="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
-                                />
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input
+                                        id="deadline"
+                                        type="datetime-local"
+                                        name="deadline"
+                                        value="{{ old('deadline') }}"
+                                        class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                    />
+                                    <button type="button" data-set-time class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">Set</button>
+                                </div>
                                 @error('deadline')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                 @enderror
@@ -170,10 +206,10 @@
                 <div class="rounded-2xl border border-zinc-200 bg-white p-5">
                     <div class="flex items-baseline justify-between">
                         <h2 class="text-base font-semibold">Tasks</h2>
-                        <p class="text-sm text-zinc-600">{{ $tasks->count() }} total</p>
+                        <p class="text-sm text-zinc-600" data-tasks-count>{{ $tasks->count() }} total</p>
                     </div>
 
-                    <div class="mt-4 space-y-3">
+                    <div class="mt-4 space-y-3" data-tasks-list>
                         @forelse ($tasks as $task)
                             @php
                                 $deadlineMs = $task->deadline?->getTimestampMs();
@@ -182,13 +218,13 @@
                                 $isDueSoon = !$isDone && $task->deadline && $task->deadline->gte($now) && $task->deadline->lte($now->copy()->addDay());
                             @endphp
 
-                            <div class="rounded-2xl border border-zinc-200 p-4" x-data="{ editing: false }">
+                            <div class="rounded-2xl border border-zinc-200 p-4" x-data="{ editing: false }" data-task-id="{{ $task->id }}">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <p class="truncate text-sm font-semibold">{{ $task->task_name }}</p>
+                                            <p class="truncate text-sm font-semibold" data-task-name>{{ $task->task_name }}</p>
 
-                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700">
+                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700" data-task-status>
                                                 {{ $statusLabels[$task->status] ?? $task->status }}
                                             </span>
 
@@ -206,7 +242,7 @@
                                                         return 'bg-green-50 text-green-700 ring-green-200';
                                                     })()"
                                                 >
-                                                    <span
+                                                    <span data-task-deadline
                                                         x-text="(() => {
                                                             const deadline = {{ $deadlineMs ? $deadlineMs : 'null' }};
                                                             if (!deadline) return 'No deadline';
@@ -222,15 +258,18 @@
 
                                         <div class="mt-2 flex flex-wrap gap-2 text-xs text-zinc-600">
                                             @if ($task->category)
-                                                <span class="rounded-full bg-green-50 px-2.5 py-1 font-medium text-green-800 ring-1 ring-inset ring-green-200">{{ $task->category->name }}</span>
+                                                <span class="rounded-full bg-green-50 px-2.5 py-1 font-medium text-green-800 ring-1 ring-inset ring-green-200" data-task-category>{{ $task->category->name }}</span>
                                             @endif
                                             @if ($task->subject)
-                                                <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200">{{ $task->subject->name }}</span>
+                                                <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200" data-task-subject>{{ $task->subject->name }}</span>
                                             @endif
                                             @if ($task->deadline)
-                                                <span class="px-1">Deadline: {{ $task->deadline->format('Y-m-d H:i') }}</span>
+                                                <span class="px-1" data-task-deadline-full>Deadline: {{ $task->deadline->format('Y-m-d H:i') }}</span>
                                             @else
-                                                <span class="px-1">Deadline: —</span>
+                                                <span class="px-1" data-task-deadline-full>Deadline: —</span>
+                                            @endif
+                                            @if ($task->reminder)
+                                                <span class="px-1">Reminder: {{ $task->reminder->remind_at->format('Y-m-d H:i') }}</span>
                                             @endif
                                             
                                         </div>
@@ -245,7 +284,7 @@
                                             Edit
                                         </button>
 
-                                        <form method="POST" action="{{ route('tasks.destroy', $task) }}">
+                                        <form method="POST" action="{{ route('tasks.destroy', $task) }}" class="sm:ml-2" data-ajax-delete data-remove="closest:.rounded-2xl.border.p-4">
                                             @csrf
                                             @method('DELETE')
                                             <button
@@ -260,7 +299,7 @@
                                 </div>
 
                                 <div class="mt-4" x-show="editing" x-cloak>
-                                    <form method="POST" action="{{ route('tasks.update', $task) }}" class="grid gap-3 sm:grid-cols-2">
+                                    <form method="POST" action="{{ route('tasks.update', $task) }}" class="grid gap-3 sm:grid-cols-2" data-ajax-update>
                                         @csrf
                                         @method('PATCH')
 
@@ -330,11 +369,36 @@
                                         </div>
                                     </form>
                                 </div>
+
+                                <div class="mt-3" x-data="{ showReminder: false }" data-task-reminder>
+                                    @if ($task->reminder)
+                                        <div class="flex items-center gap-2">
+                                            <div class="text-sm text-zinc-700">Reminder set: {{ $task->reminder->remind_at->format('Y-m-d H:i') }}</div>
+                                            <form method="POST" action="{{ route('reminders.destroy', $task->reminder) }}" data-ajax-delete data-remove="closest:[data-task-reminder]">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">Remove</button>
+                                            </form>
+                                            <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-1 text-xs" @click="showReminder = !showReminder">Edit</button>
+                                        </div>
+                                    @else
+                                        <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-1 text-xs" @click="showReminder = true">Set Reminder</button>
+                                    @endif
+
+                                    <div x-show="showReminder" x-cloak class="mt-2">
+                                        <form method="POST" action="{{ route('tasks.reminder.store', $task) }}" class="flex gap-2 items-center">
+                                            @csrf
+                                            <input type="datetime-local" name="remind_at" required class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" />
+                                            <input type="text" name="note" placeholder="Note (optional)" class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" />
+                                            <button type="submit" class="cursor-pointer rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white">Save</button>
+                                            <button type="button" class="cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" @click="showReminder = false">Cancel</button>
+                                        </form>
+                                    </div>
                             </div>
                         @empty
                             <div class="rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
-                                <p class="text-sm font-semibold">No tasks yet</p>
-                                <p class="mt-1 text-sm text-zinc-600">Add your first task from the form.</p>
+                                <p class="text-sm font-semibold">No tasks</p>
+                                <p class="mt-1 text-sm text-zinc-600">No tasks — add one from the form.</p>
                             </div>
                         @endforelse
                     </div>
