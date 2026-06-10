@@ -121,7 +121,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label class="text-sm font-medium" for="deadline">Deadline</label>
-                                <div class="mt-1 flex items-center gap-2">
+                                <div class="mt-1 flex items-center gap-2 min-w-0">
                                     <input
                                         id="deadline"
                                         type="datetime-local"
@@ -129,7 +129,7 @@
                                         value="{{ old('deadline') }}"
                                         class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
                                     />
-                                    <button type="button" data-set-time class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">Set</button>
+                                    <button type="button" data-set-time class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 flex-shrink-0">Set</button>
                                 </div>
                                 @error('deadline')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
