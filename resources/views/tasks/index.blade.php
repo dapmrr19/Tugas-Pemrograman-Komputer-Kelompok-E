@@ -213,7 +213,7 @@
             </section>
 
             <section class="lg:col-span-7">
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5">
+                <div class="bg-transparent p-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <img src="{{ asset('images/book-icon.svg') }}" alt="Books" class="w-6 h-6" />
@@ -222,7 +222,7 @@
                         <p class="text-sm text-zinc-600" data-tasks-count>{{ $tasks->count() }} total</p>
                     </div>
 
-                    <div class="mt-4 space-y-3" data-tasks-list>
+                    <div class="mt-4 space-y-6" data-tasks-list>
                         @forelse ($tasks as $task)
                             @php
                                 $deadlineMs = $task->deadline?->getTimestampMs();
@@ -408,6 +408,7 @@
                                         </form>
                                     </div>
                             </div>
+                        </div>
                         @empty
                             <div class="rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
                                 <p class="text-sm font-semibold">No tasks</p>
