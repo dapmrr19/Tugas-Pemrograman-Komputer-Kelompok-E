@@ -399,12 +399,12 @@
                                     @endif
 
                                     <div x-show="showReminder" x-cloak class="mt-2">
-                                        <form method="POST" action="{{ route('tasks.reminder.store', $task) }}" class="flex gap-2 items-center">
+                                        <form method="POST" action="{{ route('tasks.reminder.store', $task) }}" class="flex flex-wrap gap-2 items-center">
                                             @csrf
-                                            <input type="datetime-local" name="remind_at" required class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" />
-                                            <input type="text" name="note" placeholder="Note (optional)" class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" />
-                                            <button type="submit" class="cursor-pointer rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white">Save</button>
-                                            <button type="button" class="cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm" @click="showReminder = false">Cancel</button>
+                                            <input type="datetime-local" name="remind_at" required class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm min-w-0" />
+                                            <input type="text" name="note" placeholder="Note (optional)" class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm min-w-0 flex-1" />
+                                            <button type="submit" class="cursor-pointer rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white shrink-0">Save</button>
+                                            <button type="button" class="cursor-pointer rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shrink-0" @click="showReminder = false">Cancel</button>
                                         </form>
                                     </div>
                             </div>
