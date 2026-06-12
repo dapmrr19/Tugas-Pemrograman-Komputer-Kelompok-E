@@ -59,25 +59,7 @@
                             @endif
                         </div>
 
-                        {{-- show two nearest deadlines front --}}
-                        <div class="flex flex-col text-xs text-zinc-700" data-nearest-deadlines>
-                            @foreach ($nearestDeadlines ?? [] as $d)
-                                @php
-                                    $classes = 'px-2 py-1 rounded-md border flex items-center justify-between';
-                                    if (($d['status'] ?? '') === 'overdue') {
-                                        $classes = $classes . ' bg-red-50 text-red-700 ring-1 ring-inset ring-red-200';
-                                    } elseif (($d['status'] ?? '') === 'due_soon') {
-                                        $classes = $classes . ' due-soon';
-                                    } else {
-                                        $classes = $classes . ' bg-zinc-50 text-zinc-700';
-                                    }
-                                @endphp
-                                <div class="{{ $classes }}" data-deadline-ms="{{ $d['deadline_ms'] ?? '' }}">
-                                    <div class="font-medium">{{ $d['task_name'] }}</div>
-                                    <div class="text-xs text-zinc-500 ml-4" data-countdown>{{ $d['due_countdown'] }}</div>
-                                </div>
-                            @endforeach
-                        </div>
+                        {{-- preview removed: nearest deadlines are hidden here --}}
 
                         <button type="button" class="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:border-zinc-300" @click="open = !open">View</button>
                     </div>
