@@ -235,7 +235,13 @@
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <p class="truncate text-sm font-semibold" data-task-name>{{ $task->task_name }}</p>
+                                            @if ($isDone)
+                                                <svg class="w-5 h-5 text-green-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            @endif
+
+                                            <p class="truncate text-sm font-semibold {{ $isDone ? 'line-through text-zinc-400' : '' }}" data-task-name>{{ $task->task_name }}</p>
 
                                             <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700" data-task-status>
                                                 {{ $statusLabels[$task->status] ?? $task->status }}
