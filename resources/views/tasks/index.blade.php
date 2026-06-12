@@ -88,12 +88,34 @@
                     <div class="text-sm font-semibold">All deadlines</div>
                     <div class="mt-2 space-y-2 text-sm">
                         @foreach ($allDeadlines ?? [] as $d)
-                            <div class="rounded-lg border border-zinc-100 p-2 flex items-start justify-between">
+                            @php
+                                $deadlineMs = $d['deadline_ms'] ?? (isset($d['deadline']) && $d['deadline'] ? \Illuminate\Support\Carbon::parse($d['deadline'])->getTimestampMs() : null);
+                            @endphp
+                            <div x-data="{ deadline: {{ $deadlineMs ?? 'null' }} }" :class="(() => {
+                                const dl = deadline;
+                                if (!dl) return '';
+                                const diff = dl - now;
+                                if (diff < 0) return 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200';
+                                if (diff <= 24*60*60*1000) return 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200';
+                                return 'bg-zinc-50 text-zinc-700 ring-1 ring-inset ring-zinc-200';
+                            })()" class="rounded-lg border border-zinc-100 p-2 flex items-start justify-between">
                                 <div>
                                     <div class="font-medium">{{ $d['task_name'] }}</div>
                                     <div class="text-xs text-zinc-500">Deadline: {{ $d['deadline'] }}</div>
                                 </div>
-                                <div class="text-xs text-amber-700">{{ $d['due_countdown'] }}</div>
+                                <div class="text-xs font-semibold" x-text="(() => {
+                                    const dl = deadline;
+                                    if (!dl) return '—';
+                                    const diff = dl - now;
+                                    if (diff < 0) return 'Overdue';
+                                    const s = Math.floor(diff / 1000);
+                                    const days = Math.floor(s / 86400);
+                                    const hours = Math.floor((s % 86400) / 3600);
+                                    const minutes = Math.floor((s % 3600) / 60);
+                                    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+                                    if (hours > 0) return `${hours}h ${minutes}m`;
+                                    return `${minutes}m`;
+                                })()"></div>
                             </div>
                         @endforeach
                         @if (empty($allDeadlines) || collect($allDeadlines)->isEmpty())
